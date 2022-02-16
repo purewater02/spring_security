@@ -31,8 +31,8 @@ spring:
       client:
         registration:
           google: # /oauth2/authorization/google 이 주소를 동작하게 한다.
-            client-id: 머시기
-            client-secret: 머시기
+            client-id: 423568082164-f2ph1i8akmob3ndh7e0e1ulci4dig0qi.apps.googleusercontent.com
+            client-secret: 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
             scope:
             - email
             - profile
