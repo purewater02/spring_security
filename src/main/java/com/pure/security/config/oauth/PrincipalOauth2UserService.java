@@ -1,18 +1,56 @@
 package com.pure.security.config.oauth;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import com.pure.security.config.auth.PrincipalDetails;
+import com.pure.security.model.User;
+import com.pure.security.repository.UserRepository;
+
 @Service
 public class PrincipalOauth2UserService extends DefaultOAuth2UserService {
+	
+	@Autowired
+	private UserRepository userRepository;
+	
 	@Override
 	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-		System.out.println("userRequset.getClientRegistration: "+ userRequest.getClientRegistration());
+		System.out.println("userRequset.getClientRegistration: "+ userRequest.getClientRegistration()); //registrationId로 어떤 OAuth로 로그인 했는지 알 수 있음.
 		System.out.println("userRequset.getAccessToken: "+ userRequest.getAccessToken());
 		System.out.println("userRequest.getAttributes: "+ super.loadUser(userRequest).getAttributes());
-		return super.loadUser(userRequest);
+		
+		OAuth2User oauth2User = super.loadUser(userRequest);
+		String provider = userRequest.getClientRegistration().getRegistrationId(); //google?
+		String providerId = oauth2User.getAttribute("sub");
+		String username = provider+"_"+providerId;
+		String password = new BCryptPasswordEncoder().encode("1234");
+		String email = oauth2User.getAttribute("email");
+		String role = "ROLE_USER";
+		
+		//해당 username이 이미 있는지 확인
+		User userEntity = userRepository.findByUsername(username);
+		
+		//구글로 처음 로그인 하면 자동으로 회원가입 시킴.
+		if(userEntity == null) {
+			System.out.println("최초 구글 로그인으로 회원가입을 진행했습니다.");
+			userEntity = User.builder()
+					.username(username)
+					.password(password)
+					.email(email)
+					.role(role)
+					.provider(providerId)
+					.providerId(providerId)
+					.build();
+			userRepository.save(userEntity);
+		}else {
+			System.out.println("구글 회원가입 정보가 있습니다. 로그인을 진행했습니다.");
+		}
+		
+		return new PrincipalDetails(userEntity, oauth2User.getAttributes()); //이 PrincipalDetails가 Authentication 객체 안에 들어가게 됨.
 	}
 }
