@@ -38,8 +38,8 @@ spring:
             - profile
             
           facebook:
-            client-id: 머시기
-            client-secret: 머시기
+            client-id: 700849827991717
+            client-secret: 7fe509d1cd08a2522791f4e9d74c7de8
             scope:
             - email
             - public_profile

@@ -9,6 +9,9 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import com.pure.security.config.auth.PrincipalDetails;
+import com.pure.security.config.oauth.provider.FacebookUserInfo;
+import com.pure.security.config.oauth.provider.GoogleUserInfo;
+import com.pure.security.config.oauth.provider.OAuth2UserInfo;
 import com.pure.security.model.User;
 import com.pure.security.repository.UserRepository;
 
@@ -25,9 +28,19 @@ public class PrincipalOauth2UserService extends DefaultOAuth2UserService {
 		System.out.println("userRequest.getAttributes: "+ super.loadUser(userRequest).getAttributes());
 		
 		OAuth2User oauth2User = super.loadUser(userRequest);
-		String provider = userRequest.getClientRegistration().getRegistrationId(); //google?
-		String providerId = oauth2User.getAttribute("sub");
-		String username = provider+"_"+providerId;
+		String provider = userRequest.getClientRegistration().getRegistrationId(); //google?		
+		OAuth2UserInfo oAuth2UserInfo = null;
+		if(provider.equals("google")) {
+			System.out.println("구글 로그인 요청");
+			oAuth2UserInfo = new GoogleUserInfo(oauth2User.getAttributes());		
+		}else if(provider.equals("facebook")) {
+			System.out.println("페이스북 로그인 요청");
+			oAuth2UserInfo = new FacebookUserInfo(oauth2User.getAttributes());
+		}else {
+			System.out.println("현재 구글과 페이스북만 지원됩니다.");
+		}
+		String providerId = oAuth2UserInfo.getProviderId();
+		String username = provider+"_"+oAuth2UserInfo.getProviderId();
 		String password = new BCryptPasswordEncoder().encode("1234");
 		String email = oauth2User.getAttribute("email");
 		String role = "ROLE_USER";
@@ -43,7 +56,7 @@ public class PrincipalOauth2UserService extends DefaultOAuth2UserService {
 					.password(password)
 					.email(email)
 					.role(role)
-					.provider(providerId)
+					.provider(provider)
 					.providerId(providerId)
 					.build();
 			userRepository.save(userEntity);
