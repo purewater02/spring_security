@@ -47,8 +47,8 @@ spring:
           # 네이버는 OAuth2.0 공식 지원대상이 아니라서 provider 설정이 필요하다.
           # 요청주소도 다르고, 응답 데이터도 다르기 때문이다.
           naver:
-            client-id: 머시기
-            client-secret: 머시기
+            client-id: oDKwI_7cos2bk7GSTd90
+            client-secret: vLUsWg_6Vr
             scope:
             - name
             - email
